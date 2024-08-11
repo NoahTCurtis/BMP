@@ -26,5 +26,14 @@ public:
     FVector Direction;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bCopyToDestination;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector Destination;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bInvert;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     EMeshOperationType Type;
 };
