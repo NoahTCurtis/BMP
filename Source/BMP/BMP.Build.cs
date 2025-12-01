@@ -14,6 +14,7 @@ public class BMP : ModuleRules
 			"Engine",
 			"InputCore",
 			"EnhancedInput",
+			"GameplayTags",
 			//"GeometryScripting",	
 		});
 
