@@ -49,11 +49,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FOnRoomLoadedDelegate RoomStateLoadCompleteDelegate;
 
-	// Tag identifying the room (e.g. Room.Lobby, Room.Boss1)
+	// Tag identifying the room to be loaded (e.g. Room.Lobby, Room.Boss1)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FGameplayTag RoomTag;
 
-	// Tag requesting a specific door in this room
+	// Tag requesting a specific door in this room (e.g. Door.1, Door.2, Door.Special)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FGameplayTag DoorTag;
 
@@ -85,6 +85,36 @@ public:
 	{}
 };
 
+// Used to understand the transforms of doors inside unloaded rooms
+// Innermost struct. Replaces TPair<FGameplayTag, FTransform>
+USTRUCT(BlueprintType)
+struct FDoorTransformPairStruct
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	FGameplayTag DoorTag;
+
+	UPROPERTY(EditAnywhere)
+	FTransform DoorTransform;
+};
+
+// Used to understand the transforms of doors inside unloaded rooms
+// Reflection is fun
+USTRUCT(BlueprintType)
+struct FRoomDoorTransformListStruct
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<UWorld> LevelPtr;
+
+	UPROPERTY(EditAnywhere)
+	TArray<FDoorTransformPairStruct> DoorTransforms;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BMP_API URoomManagerComponent : public UActorComponent
 {
@@ -93,6 +123,13 @@ class BMP_API URoomManagerComponent : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	URoomManagerComponent();
+
+	// Called in editor to collect door transforms
+	UFUNCTION(CallInEditor)
+	void CollectDoorTransforms();
+
+	UPROPERTY(EditAnywhere)
+	FName RoomLevelInstanceDirectory = "/Game/Rooms";
 
 protected:
 	// Called when the game starts
@@ -131,12 +168,6 @@ protected:
 	UFUNCTION()
 	void DoRoomState_Unloaded();
 
-
-	// todo: replace this with a tag and doormatching lookup system
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSoftObjectPtr<UWorld> LevelToLoad;
-
-
 	// Spawns the initial start room
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSoftObjectPtr<UWorld> FirstLevelToLoad;
@@ -148,6 +179,10 @@ protected:
 
 	UPROPERTY()
 	TArray<FRoomStateStruct> LoadedRooms;
+
+	//Map of room tags to door tags to transforms. This stores door locations as the rooms do first time loads.
+	UPROPERTY(EditAnywhere)
+	TMap<FGameplayTag, FRoomDoorTransformListStruct> KnownDoorLocations;
 
 	// Handle to the level streaming instance. Can also be used to unload the room.
 	UPROPERTY()
